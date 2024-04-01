@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
   abiExporter: {
     path: "./abi",
     runOnCompile: true,
-    only: ["IArbitrage"],
+    only: ["IArbitrage", "ICalculation"],
     format: "json",
   },
 };
