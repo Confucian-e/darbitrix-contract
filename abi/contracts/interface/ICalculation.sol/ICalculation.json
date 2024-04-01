@@ -1,0 +1,36 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pair0",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "pair1",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateProfit",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
