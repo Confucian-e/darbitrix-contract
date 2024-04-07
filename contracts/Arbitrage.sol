@@ -9,6 +9,11 @@ import {IERC20} from "@balancer-labs/v2-interfaces/contracts/solidity-utils/open
 
 import {IArbitrage, Call, InvalidCaller, CallFailed, LengthNotMatch} from "./interface/IArbitrage.sol";
 
+/**
+ * @title Arbitrage contract to swap between DEXs using FLashLoan to borrow assets
+ * @author Confucian
+ * @notice Beta Version
+ */
 contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
     /// @dev Vault address of Balancer
     address public immutable vault;
@@ -50,18 +55,18 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
         uint256[] memory feeAmounts,
         bytes memory userData
     ) external override {
-        if (msg.sender != vault) revert InvalidCaller();
+        if (msg.sender != vault) revert InvalidCaller(msg.sender);
 
-        uint256 len = tokens.length;
-        Call[] memory calls = abi.decode(userData, (Call[]));
-
-        // swap tokens
-        for (uint256 i = 0; i < len; ++i) {
-            execute(calls[i]);
+        if (userData.length != 0) {
+            Call[] memory calls = abi.decode(userData, (Call[]));
+            /// @dev swap tokens
+            for (uint256 i = 0; i < calls.length; ++i) {
+                execute(calls[i]);
+            }
         }
 
-        // pay back
-        for (uint256 i = 0; i < len; ++i) {
+        /// @dev pay back
+        for (uint256 i = 0; i < tokens.length; ++i) {
             tokens[i].transfer(vault, amounts[i] + feeAmounts[i]);
         }
     }
@@ -72,7 +77,7 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
      */
     function execute(Call memory param) internal {
         (bool success, ) = param.target.call(param.callData);
-        if (!success) revert CallFailed();
+        if (!success) revert CallFailed(param.target, param.callData);
     }
 
     /**
@@ -84,7 +89,7 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
         IERC20[] calldata tokens,
         address[] calldata spenders
     ) external {
-        if (tokens.length != spenders.length) revert LengthNotMatch();
+        if (tokens.length != spenders.length) revert LengthNotMatch(tokens.length, spenders.length);
         uint256 maxUint = type(uint256).max;
         for (uint256 i = 0; i < tokens.length; ++i) {
             tokens[i].approve(spenders[i], maxUint);
@@ -119,6 +124,6 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
         bytes calldata data
     ) external onlyOwner {
         (bool success, ) = target.delegatecall(data);
-        if (!success) revert CallFailed();
+        if (!success) revert CallFailed(target, data);
     }
 }
