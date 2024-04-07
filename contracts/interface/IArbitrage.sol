@@ -3,9 +3,9 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@balancer-labs/v2-interfaces/contracts/solidity-utils/openzeppelin/IERC20.sol";
 
-error InvalidCaller();
-error CallFailed();
-error LengthNotMatch();
+error InvalidCaller(address caller);
+error CallFailed(address target, bytes callData);
+error LengthNotMatch(uint256 length1, uint256 length2);
 
 struct Call {
     address target;
