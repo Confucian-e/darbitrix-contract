@@ -2,7 +2,10 @@ import { HardhatUserConfig, vars } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-abi-exporter";
 
-const Sepolia_RPC_URL = vars.get("Sepolia_RPC_URL", "https://sepolia.drpc.org");
+const Arbitrum_RPC_URL = vars.get(
+  "Arbitrum_RPC_URL",
+  "https://arbitrum.drpc.org"
+);
 const PK = vars.get("PK", "0x");
 
 const config: HardhatUserConfig = {
@@ -19,8 +22,8 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://localhost:8545",
     },
-    sepolia: {
-      url: Sepolia_RPC_URL,
+    arbitrum: {
+      url: Arbitrum_RPC_URL,
       accounts: [PK],
     },
   },
