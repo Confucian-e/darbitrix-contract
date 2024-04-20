@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
 import {IVault} from "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
 import {IFlashLoanRecipient} from "@balancer-labs/v2-interfaces/contracts/vault/IFlashLoanRecipient.sol";
 import {IERC20} from "@balancer-labs/v2-interfaces/contracts/solidity-utils/openzeppelin/IERC20.sol";
@@ -14,11 +12,11 @@ import {IArbitrage, Call, InvalidCaller, CallFailed, LengthNotMatch} from "./int
  * @author Confucian
  * @notice Beta Version
  */
-contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
+contract Arbitrage is IArbitrage, IFlashLoanRecipient {
     /// @dev Vault address of Balancer
     address public immutable vault;
 
-    constructor(address _vault) Ownable(msg.sender) {
+    constructor(address _vault) {
         vault = _vault;
     }
 
@@ -32,7 +30,7 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
         IERC20[] calldata tokens,
         uint256[] calldata amounts,
         bytes calldata userData
-    ) external onlyOwner {
+    ) external {
         address receipient = address(this);
         IVault(vault).flashLoan(
             IFlashLoanRecipient(receipient),
@@ -76,8 +74,8 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
      * @param param Call struct param
      */
     function execute(Call memory param) internal {
-        (bool success, ) = param.target.call(param.callData);
-        if (!success) revert CallFailed(param.target, param.callData);
+        (bool success, bytes memory reason) = param.target.call(param.callData);
+        if (!success) revert CallFailed(param.target, param.callData, reason);
     }
 
     /**
@@ -89,7 +87,8 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
         IERC20[] calldata tokens,
         address[] calldata spenders
     ) external {
-        if (tokens.length != spenders.length) revert LengthNotMatch(tokens.length, spenders.length);
+        if (tokens.length != spenders.length)
+            revert LengthNotMatch(tokens.length, spenders.length);
         uint256 maxUint = type(uint256).max;
         for (uint256 i = 0; i < tokens.length; ++i) {
             tokens[i].approve(spenders[i], maxUint);
@@ -100,7 +99,7 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
      * @dev Withdraw tokens from contract
      * @param tokens tokens address
      */
-    function withdraw(address[] calldata tokens) external onlyOwner {
+    function withdraw(address[] calldata tokens) external {
         address owner = msg.sender;
         for (uint256 i = 0; i < tokens.length; ++i) {
             if (tokens[i] == address(0)) {
@@ -119,11 +118,8 @@ contract Arbitrage is IArbitrage, Ownable, IFlashLoanRecipient {
      * @param target targe address
      * @param data calldata to pass
      */
-    function delegateCall(
-        address target,
-        bytes calldata data
-    ) external onlyOwner {
-        (bool success, ) = target.delegatecall(data);
-        if (!success) revert CallFailed(target, data);
+    function delegateCall(address target, bytes calldata data) external {
+        (bool success, bytes memory ret) = target.delegatecall(data);
+        if (!success) revert CallFailed(target, data, ret);
     }
 }
