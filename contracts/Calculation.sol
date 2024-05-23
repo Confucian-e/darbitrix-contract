@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+
 import {IUniswapV2Pair} from "./interface/IUniswapV2Pair.sol";
 import {UniswapV2Library} from "./libraries/UniswapV2Library.sol";
 
@@ -61,6 +63,6 @@ contract Calculation is ICalculation {
             reserve1
         );
 
-        profit = amountFinal > amountIn ? amountFinal - amountIn : 0;
+        (, profit) = Math.trySub(amountFinal, amountIn);
     }
 }

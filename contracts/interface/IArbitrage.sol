@@ -13,18 +13,15 @@ struct Call {
 }
 
 interface IArbitrage {
+    event Profit(
+        address indexed account,
+        address indexed token,
+        uint256 balance
+    );
+
     function makeFlashLoan(
         IERC20[] calldata tokens,
         uint256[] calldata amounts,
         bytes calldata userData
     ) external;
-
-    function approveTokens(
-        IERC20[] calldata tokens,
-        address[] calldata spenders
-    ) external;
-
-    function withdraw(address[] calldata tokens) external;
-
-    function delegateCall(address target, bytes calldata data) external;
 }

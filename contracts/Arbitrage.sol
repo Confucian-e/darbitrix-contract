@@ -16,6 +16,10 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
     /// @dev Vault address of Balancer
     address public immutable vault;
 
+    /**
+     * @dev Constructor function for the Arbitrage contract.
+     * @param _vault The address of the vault contract.
+     */
     constructor(address _vault) {
         vault = _vault;
     }
@@ -31,6 +35,8 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
         uint256[] calldata amounts,
         bytes calldata userData
     ) external {
+        if (tokens.length != amounts.length)
+            revert LengthNotMatch(tokens.length, amounts.length);
         address receipient = address(this);
         IVault(vault).flashLoan(
             IFlashLoanRecipient(receipient),
@@ -63,10 +69,9 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
             }
         }
 
-        /// @dev pay back
-        for (uint256 i = 0; i < tokens.length; ++i) {
-            tokens[i].transfer(vault, amounts[i] + feeAmounts[i]);
-        }
+        payback(tokens, amounts, feeAmounts);
+
+        reedem(tokens);
     }
 
     /**
@@ -79,47 +84,34 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
     }
 
     /**
-     * @dev approve tokens before making flashloan
-     * @param tokens approve tokens
-     * @param spenders approve spenders
+     * @dev Transfers specified amounts of tokens to the vault address.
+     * @param tokens An array of ERC20 tokens to transfer.
+     * @param amounts An array of amounts to transfer for each token.
+     * @param feeAmounts An array of fee amounts to add to each transfer.
      */
-    function approveTokens(
-        IERC20[] calldata tokens,
-        address[] calldata spenders
-    ) external {
-        if (tokens.length != spenders.length)
-            revert LengthNotMatch(tokens.length, spenders.length);
-        uint256 maxUint = type(uint256).max;
+    function payback(
+        IERC20[] memory tokens,
+        uint256[] memory amounts,
+        uint256[] memory feeAmounts
+    ) internal {
         for (uint256 i = 0; i < tokens.length; ++i) {
-            tokens[i].approve(spenders[i], maxUint);
+            tokens[i].transfer(vault, amounts[i] + feeAmounts[i]);
         }
     }
 
     /**
-     * @dev Withdraw tokens from contract
-     * @param tokens tokens address
+     * @dev Internal function to redeem tokens.
+     * @param tokens An array of ERC20 tokens to redeem.
      */
-    function withdraw(address[] calldata tokens) external {
-        address owner = msg.sender;
+    function reedem(IERC20[] memory tokens) internal {
+        address account = tx.origin;
         for (uint256 i = 0; i < tokens.length; ++i) {
-            if (tokens[i] == address(0)) {
-                payable(owner).transfer(address(this).balance);
-            } else {
-                IERC20 token = IERC20(tokens[i]);
-                token.transfer(owner, token.balanceOf(address(this)));
+            IERC20 token = tokens[i];
+            uint256 balance = token.balanceOf(address(this));
+            if (balance > 0) {
+                token.transfer(account, balance);
+                emit Profit(account, address(token), balance);
             }
         }
-    }
-
-    // ======================= Experimental =======================
-
-    /**
-     * @dev Delegate call to target
-     * @param target targe address
-     * @param data calldata to pass
-     */
-    function delegateCall(address target, bytes calldata data) external {
-        (bool success, bytes memory ret) = target.delegatecall(data);
-        if (!success) revert CallFailed(target, data, ret);
     }
 }
