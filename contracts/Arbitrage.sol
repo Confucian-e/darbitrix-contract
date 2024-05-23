@@ -25,6 +25,23 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
     }
 
     /**
+     * @dev approve tokens before making flashloan
+     * @param tokens approve tokens
+     * @param spenders approve spenders
+     */
+    function approveTokens(
+        IERC20[] calldata tokens,
+        address[] calldata spenders
+    ) external {
+        if (tokens.length != spenders.length)
+            revert LengthNotMatch(tokens.length, spenders.length);
+        uint256 maxUint = type(uint256).max;
+        for (uint256 i = 0; i < tokens.length; ++i) {
+            tokens[i].approve(spenders[i], maxUint);
+        }
+    }
+
+    /**
      * @dev Entrypoint to make flashloan
      * @param tokens Tokens to borrow
      * @param amounts Amounts to borrow
