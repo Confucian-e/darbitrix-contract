@@ -7,6 +7,7 @@ const Arbitrum_RPC_URL = vars.get(
   "https://arbitrum.drpc.org"
 );
 const PK = vars.get("PK", "0x");
+const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -25,6 +26,11 @@ const config: HardhatUserConfig = {
     arbitrum: {
       url: Arbitrum_RPC_URL,
       accounts: [PK],
+    },
+  },
+  etherscan: {
+    apiKey: {
+      arbitrumOne: ETHERSCAN_API_KEY,
     },
   },
   abiExporter: {
