@@ -32,7 +32,7 @@ contract Arbitrage is IArbitrage, IFlashLoanRecipient {
     function approveTokens(
         IERC20[] calldata tokens,
         address[] calldata spenders
-    ) external {
+    ) external override {
         if (tokens.length != spenders.length)
             revert LengthNotMatch(tokens.length, spenders.length);
         uint256 maxUint = type(uint256).max;

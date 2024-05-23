@@ -19,6 +19,11 @@ interface IArbitrage {
         uint256 balance
     );
 
+    function approveTokens(
+        IERC20[] calldata tokens,
+        address[] calldata spenders
+    ) external;
+
     function makeFlashLoan(
         IERC20[] calldata tokens,
         uint256[] calldata amounts,
